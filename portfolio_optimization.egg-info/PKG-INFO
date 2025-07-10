@@ -1,0 +1,14 @@
+Metadata-Version: 1.2
+Name: portfolio-optimization
+Version: 1.0.0
+Summary: An open-source software tool for Project Portfolio Selection and Scheduling Problem
+Home-page: UNKNOWN
+Author: Jing Liu
+Author-email: liujing2605@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6

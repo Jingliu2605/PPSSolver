@@ -1,0 +1,14 @@
+/.idea/
+/build/
+__pycache__/
+/hyp_opt/output/
+
+*.html
+*.pyd
+*.c
+*.cpp
+*.so
+*.pyc
+*.dat
+*.log
+*.pkl

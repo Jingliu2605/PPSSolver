@@ -1,0 +1,3 @@
+[console_scripts]
+portfolio_gui = GUI:main
+
