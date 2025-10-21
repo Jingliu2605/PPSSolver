@@ -24,7 +24,7 @@ python Gui.py
 ```
 Or, download and run PPSSolver.exe for the desktop version
 
-[Download PPSSolver.exe](https://drive.google.com/file/d/184-1gYs-JMi-M8GPfJYOWnihBVzQirMf/view?usp=drive_link)
+[Download PPSSolver.exe](https://drive.google.com/file/d/1l6f6L6BJPjdafdkz1d_afFckgWDLDpRf/view?usp=sharing)
 
 ## Usage Guide:
 PPSSolver can be used through running Gui.py via Python scripts or directly using executable desktop application.
