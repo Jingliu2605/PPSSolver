@@ -145,10 +145,10 @@ All tests were conducted on a Windows 11 system with a 12th Gen Intel(R) Core(TM
     ![img_13.png](img_13.png)
     - GA:
     
-   ![img_12.png](img_12.png)
+    ![img_12.png](img_12.png)
     - HEGCL:
   
-   ![img_14.png](img_14.png)
+    ![img_14.png](img_14.png)
 - **Conclusion**: The dynamic handling module effectively manages changes in project parameters and successfully re-optimizes the modified instances.
 
 ### 2.4. Results Analysis
@@ -169,10 +169,10 @@ All tests were conducted on a Windows 11 system with a 12th Gen Intel(R) Core(TM
 - If the user attempts to generate an instance or optimize without setting valid paths in the Paths Configuration, the application correctly displays an error message in an error box, preventing further execution until valid paths are provided.
   ![img_21.png](img_21.png)
 - When Gurobi was not installed properly or the license was invalid. The application correctly displayed an error message in the solver output log and an error box, preventing further execution. This behavior is appropriate as it informs the user of the issue without causing a crash.
- ![img_5.png](img_5.png)
+  ![img_5.png](img_5.png)
 - When parameters were missing or invalid parameters were entered (e.g., negative values for budget proportion or discount rate), the application displayed appropriate error messages in an error box, preventing further execution until valid parameters were provided.
-![img_23.png](img_23.png)
-![img_22.png](img_22.png)
+  ![img_23.png](img_23.png)
+  ![img_22.png](img_22.png)
 
 ## 4. Overall Conclusion
 The PPSSolver application (Version 1.0) has been thoroughly validated across all four modules: Instance Generation, Optimization, Dynamic Handling, and Results Analysis. Each module performed as expected, successfully generating instances, optimizing them using various algorithms, handling dynamic changes, and analyzing results accurately. The application is deemed reliable and effective for solving the Project Portfolio Selection and Scheduling Problem (PPSSP).
