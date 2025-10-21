@@ -1,4 +1,4 @@
-# PPSSP Solver GUI (PyPPS)
+# PPSSP Solver GUI (PPSSolver)
 
 PPSSolver is an open-source Python software for solving Project Portfolio Selection and Scheduling Problems (PPSSP) using optimization techniques like Gurobi, GA, and DE. 
 
