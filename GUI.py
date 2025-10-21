@@ -218,10 +218,15 @@ class PPSSPGUI(tk.Tk):
         optimization_frame.configure(style="TLabelframe")
         optimization_frame['borderwidth'] = 0
 
-        ttk.Label(optimization_frame, text="Select Instance File:").grid(row=0, column=0, sticky="w")
-        self.project_file_path = tk.StringVar()
-        ttk.Entry(optimization_frame, textvariable=self.project_file_path, width=40).grid(row=0, column=1, padx=5)
-        ttk.Button(optimization_frame, text="Browse", command=self.load_project_file).grid(row=0, column=2, padx=5)
+        ttk.Label(optimization_frame, text="Select Instance File(s):").grid(row=0, column=0, sticky="w")
+        self.project_file_listbox = tk.Listbox(optimization_frame, selectmode=tk.MULTIPLE, height=3, width=40,
+                                               exportselection=False)
+        self.project_file_listbox.grid(row=0, column=1, padx=5)
+        ttk.Button(optimization_frame, text="Browse", command=self.load_project_files).grid(row=0, column=2, padx=5)
+
+        # self.project_file_path = tk.StringVar()
+        # ttk.Entry(optimization_frame, textvariable=self.project_file_path, width=40).grid(row=0, column=1, padx=5)
+        # ttk.Button(optimization_frame, text="Browse", command=self.load_project_file).grid(row=0, column=2, padx=5)
 
         ttk.Label(optimization_frame, text="Select Solver:").grid(row=1, column=0, sticky="w")
         self.solver_choice = tk.StringVar(value="GA")
@@ -444,13 +449,13 @@ class PPSSPGUI(tk.Tk):
         if solver_name == "Gurobi":
             param_names = ["Time Limit", "MIP Gap"]
         elif solver_name == "HEGCL":
-            param_names = ["Runs", "Group size", "Time Limit", "Population Size", "Crossover Rate", "Mutation Rate"]
+            param_names = ["Runs", "Group size", "Time Limit", "Population Size", "Crossover Rate", "Mutation Rate", "Result Display Frequency"]
         elif solver_name == "GA":
-            param_names = ["Runs", "Population Size", "Max Evaluations", "Crossover Rate", "Mutation Rate"]
+            param_names = ["Runs", "Population Size", "Max Evaluations", "Crossover Rate", "Mutation Rate", "Result Display Frequency"]
         elif solver_name == "DE":
-            param_names = ["Runs", "Population Size", "Max Evaluations", "Crossover Rate", "Differential weight"]
+            param_names = ["Runs", "Population Size", "Max Evaluations", "Crossover Rate", "Differential weight", "Result Display Frequency"]
         elif solver_name == "BRKGA":
-            param_names = ["Runs", "Population Size", "Max Evaluations"]
+            param_names = ["Runs", "Population Size", "Max Evaluations", "Bias", "Elite Proportion", "Result Display Frequency"]
         elif solver_name == "Others":
             param_names = ["Custom Name"]
         else:
@@ -469,10 +474,10 @@ class PPSSPGUI(tk.Tk):
         solver_name = self.solver_choice.get()
         defaults = {
             "Gurobi": ["600", "0.01"],
-            "HEGCL": ["1", "600", "200", "100", "0.8", "0.1"],
-            "GA": ["1", "100", "250000", "0.8", "0.1"],
-            "DE": ["1", "100", "250000", "0.5", "0.1"],
-            "BRKGA": ["1", "100", "250000"]
+            "HEGCL": ["1", "600", "200", "100", "0.8", "0.1", "100"],
+            "GA": ["1", "100", "250000", "0.8", "0.1", "100"],
+            "DE": ["1", "100", "250000", "0.5", "0.1", "100"],
+            "BRKGA": ["1", "100", "250000", "0.3", "0.2", "100"]
         }
         if solver_name in defaults:
             for entry, value in zip(self.param_entries, defaults[solver_name]):
@@ -492,13 +497,13 @@ class PPSSPGUI(tk.Tk):
         if solver_name == "Gurobi":
             param_names = ["Time Limit", "MIP Gap"]
         elif solver_name == "HEGCL":
-            param_names = ["Runs", "Group size", "Time Limit", "Population Size", "Crossover Rate", "Mutation Rate"]
+            param_names = ["Runs", "Group size", "Time Limit", "Population Size", "Crossover Rate", "Mutation Rate", "Result Display Frequency"]
         elif solver_name == "GA":
-            param_names = ["Runs", "Population Size", "Max Evaluations", "Crossover Rate", "Mutation Rate"]
+            param_names = ["Runs", "Population Size", "Max Evaluations", "Crossover Rate", "Mutation Rate", "Result Display Frequency"]
         elif solver_name == "DE":
-            param_names = ["Runs", "Population Size", "Max Evaluations", "Crossover Rate", "Differential weight"]
+            param_names = ["Runs", "Population Size", "Max Evaluations", "Crossover Rate", "Differential weight", "Result Display Frequency"]
         elif solver_name == "BRKGA":
-            param_names = ["Runs", "Population Size", "Max Evaluations"]
+            param_names = ["Runs", "Population Size", "Max Evaluations", "Bias", "Elite Proportion", "Result Display Frequency"]
         elif solver_name == "Others":
             param_names = ["Custom Name"]
         else:
@@ -517,10 +522,10 @@ class PPSSPGUI(tk.Tk):
         solver_name = self.dynamic_solver_choice.get()
         defaults = {
             "Gurobi": ["600", "0.01"],
-            "HEGCL": ["1", "600", "200", "100", "0.8", "0.1"],
-            "GA": ["1", "100", "250000", "0.8", "0.1"],
-            "DE": ["1", "100", "250000", "0.5", "0.1"],
-            "BRKGA": ["1", "100", "250000"]
+            "HEGCL": ["1", "600", "200", "100", "0.8", "0.1", "100"],
+            "GA": ["1", "100", "250000", "0.8", "0.1", "100"],
+            "DE": ["1", "100", "250000", "0.5", "0.1", "100"],
+            "BRKGA": ["1", "100", "250000", "0.3", "0.2", "100"]
         }
         if solver_name in defaults:
             for entry, value in zip(self.dynamic_param_entries, defaults[solver_name]):
@@ -540,6 +545,24 @@ class PPSSPGUI(tk.Tk):
         if not save_path:
             self.show_path_error_dialog()
             return
+
+        # Error handling for invalid values
+        if self.instance_index.get() <= 0:
+            messagebox.showerror("Parameter Error", "Instance Index must be a positive integer.")
+            return
+        if self.num_projects.get() <= 0:
+            messagebox.showerror("Parameter Error", "Number of Projects must be a positive integer.")
+            return
+        if self.planning_years.get() <= 0:
+            messagebox.showerror("Parameter Error", "Planning Years must be a positive integer.")
+            return
+        if not (0 < self.budget_prop.get() <= 1):
+            messagebox.showerror("Parameter Error", "Budget Proportion must be between 0 and 1 (exclusive).")
+            return
+        if not (0 < self.discount_rate.get() <= 1):
+            messagebox.showerror("Parameter Error", "Discount Rate must be between 0 and 1 (exclusive).")
+            return
+
         msg = (f"Generating instance {self.instance_index.get()} with {self.num_projects.get()} projects, {self.planning_years.get()} years, "
                f"budget proportion {self.budget_prop.get()}, and discount rate {self.discount_rate.get()}")
         self.instance_generation_output.insert(tk.END, msg + "\n")
@@ -553,6 +576,23 @@ class PPSSPGUI(tk.Tk):
             self.instance_generation_output.insert(tk.END, f"Error: {str(e)}\n")
         finally:
             self.after(0, self.progress_generate.stop)
+
+    def load_project_files(self):
+        filepaths = filedialog.askopenfilenames(title="Select Project Files",
+                                                filetypes=[("pkl Files", "*.pkl"), ("All Files", "*.*")])
+        if filepaths:
+            self.project_file_listbox.delete(0, tk.END)
+            for filepath in filepaths:
+                if not os.path.exists(filepath):
+                    messagebox.showerror("File Error", f"File does not exist: {filepath}")
+                    continue
+                if not filepath.endswith(".pkl"):
+                    messagebox.showerror("File Error", f"Invalid file format: {filepath}")  # Only .pkl files are allowed.
+                    continue
+                self.project_file_listbox.insert(tk.END, filepath)
+            self.project_file_listbox.select_set(0, tk.END) # select all files after loading them
+            self.solver_output.insert(tk.END, f"Loaded {len(filepaths)} project files.\n")
+            self.solver_output.update_idletasks()
 
     def load_project_file(self):
         filepath = filedialog.askopenfilename(title="Select Project File",
@@ -604,7 +644,7 @@ class PPSSPGUI(tk.Tk):
 
     def stop_solver_generic(self, stop_event, output_frame):
         stop_event.set()  # Stop the solver
-        output_frame.insert(tk.END, "Solver stopped.\n")
+        output_frame.insert(tk.END, "Stopping the solver.\n")
         output_frame.update_idletasks()
 
     def _run_solver_task(self):
@@ -620,42 +660,57 @@ class PPSSPGUI(tk.Tk):
             param_values = []
         else:
             param_values = [entry.get() for entry in self.solver_params]
-        project_file = self.project_file_path.get()
-        save_dir = self.result_save_path.get()
 
-        if not os.path.exists(project_file):
-            messagebox.showerror("File Error", f"The project file does not exist:\n{project_file}. Please select the project file." )
+        if any(v.strip() == "" for v in param_values):
+            messagebox.showerror("Parameter Error", "All solver parameters must be provided.")
             return
+
+        save_dir = self.result_save_path.get()
         if not os.path.exists(save_dir):
             messagebox.showerror("Save Path Error", "Result save path is not set. Please set the result save path.")
             self.notebook.select(self.configuration_page)
             return
 
-        msg = f"Running {solver} with parameters: {param_values} on: {os.path.basename(project_file)}"
-        self.solver_output.insert(tk.END, msg + "\n")
-        self.solver_output.update_idletasks()
+        selected_indices = self.project_file_listbox.curselection()
+        if not selected_indices:
+            messagebox.showerror("File Error", "No project files selected. Please select at least one project file.")
+            return
 
-        try:
-            results = run_ppssp_solver(
-                project_file,
-                solver,
-                param_values,
-                save_dir,
-                pause_event=self.pause_event,
-                stop_event=self.stop_event,
-                gui_output=self.solver_output
-            )
+        for idx in selected_indices:
+            project_file = self.project_file_listbox.get(idx)
+            if not os.path.exists(project_file):
+                self.solver_output.insert(tk.END, f"File does not exist: {project_file}\n")
+                continue
 
-            print_results(results, solver, self.solver_output, param_values[0] if param_values else "", save_dir)
+            msg = f"Running {solver} with parameters: {param_values} on: {os.path.basename(project_file)}"
+            self.solver_output.insert(tk.END, msg + "\n")
+            self.solver_output.update_idletasks()
 
-        except Exception as e:
-            if self.stop_event and self.stop_event.is_set():
-                self.solver_output.insert(tk.END, "Solver stopped by user.\n")
-            else:
-                self.solver_output.insert(tk.END, f"Error: {str(e)}\n")
-                self.solver_output.update_idletasks()
-        finally:
-            self.after(0, self.progress_optimize.stop)  # Stop progress bar on the main thread
+            try:
+                results = run_ppssp_solver(
+                    project_file,
+                    solver,
+                    param_values,
+                    save_dir,
+                    pause_event=self.pause_event,
+                    stop_event=self.stop_event,
+                    gui_output=self.solver_output
+                )
+                print_results(results, solver, self.solver_output, param_values[0] if param_values else "", save_dir)
+
+            except Exception as e:
+                if self.stop_event and self.stop_event.is_set():
+                    self.solver_output.insert(tk.END, "Solver stopped by user.\n")
+                    self.solver_output.update_idletasks()
+                    self.after(0, self.progress_optimize.stop)
+                    return
+                else:
+                    self.solver_output.insert(tk.END, f"Error: {str(e)}\n")
+                    self.solver_output.update_idletasks()
+                    self.after(0, self.progress_optimize.stop)
+            self.after(0, self.progress_optimize.stop)
+
+
 
     def select_analysis_instances(self):
         filepaths = filedialog.askopenfilenames(title="Select Instance Files",
@@ -832,6 +887,9 @@ class PPSSPGUI(tk.Tk):
             return
 
         dynamic_param_values = [entry.get() for entry in self.dynamic_solver_params]
+        if any(v.strip() == "" for v in dynamic_param_values):
+            messagebox.showerror("Parameter Error", "All dynamic solver parameters must be provided.")
+            return
         dynamic_instance_file = self.dynamic_instance_file_path.get()
         optimized_portfolio_file = self.current_portfolio_file_path.get()
         save_dir = self.result_save_path.get()

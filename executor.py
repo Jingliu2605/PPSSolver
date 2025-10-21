@@ -4,6 +4,7 @@ import time
 from warnings import warn
 import pandas as pd
 import numpy as np
+# from IPython.core.display_functions import display
 
 from algorithm_factory import get_solver_by_name
 from analysis import analyze_portfolio
@@ -11,7 +12,7 @@ from problem.enums import SchedulingOrder, Optimizer, Weighting
 from operators.my_ga import MyGA
 from operators.seeded_sampling import SeededSampling
 from problem.portfolio import build_from_array, portfolio_from_pickle
-from problem.test_portfolio_with_repair import build_from_array_and_repair
+from problem.portfolio_problem_with_repair import build_from_array_and_repair
 from problem.portfolio_real_ordered_problem import PortfolioRealOrderedProblem, MyElementwiseDuplicateElimination
 from pymoo.algorithms.so_brkga import BRKGA
 from pymoo.operators.crossover.half_uniform_crossover import HalfUniformCrossover
@@ -24,11 +25,11 @@ from solvers.roulette_solver import RouletteSolver
 from util import display_results
 from problem.portfolio import build_from_permutation
 
-from problem.test_portfolio_with_repair import TestPortfolioProblemWithRepair
+from problem.portfolio_problem_with_repair import PortfolioProblemWithRepair
 from operators.my_de import MyDE
 import pathlib
 
-from pymoo.algorithms.my_aga import MyAGA
+from pymoo.algorithms.hegcl import HEGCL
 
 
 
@@ -92,9 +93,7 @@ def run_optimizer(optimizer, pop_size, instance, termination, i, runs, output_di
     if analyze_output:
         best = _get_best_by_optimizer(res, optimizer, pheno)
 
-        if (optimizer is optimizer.GA or optimizer is Optimizer.Gurobi_GA or optimizer is Optimizer.Gurobi_DE_S
-                or optimizer is Optimizer.GA_Gurobi or optimizer is Optimizer.Gurobi_GA_Mutual or optimizer is Optimizer.GTDE_ST
-                or optimizer is Optimizer.CCDE or optimizer is Optimizer.CCGAST):
+        if (optimizer is optimizer.GA or optimizer is Optimizer.AGA):
             portfolio, _ = build_from_array(best, instance)
         else:
             portfolio = build_from_permutation(best, instance, scheduling_order)
@@ -166,12 +165,14 @@ def run_brkga(termination, pop_size, instance, random_seed, scheduling_order, **
     pause_event = kwargs['pause_event']
     kwargs.setdefault('gui_output', None)
     gui_output = kwargs['gui_output']
+    display = kwargs['display'] if 'display' in kwargs else None
 
     num_elites = math.floor(prop_elites * pop_size)
     num_mutants = math.floor(prop_mutants * pop_size)
     num_offspring = pop_size - num_elites - num_mutants
 
     method = BRKGA(n_elites=num_elites, n_offsprings=num_offspring, n_mutants=num_mutants, bias=bias,
+                   display=display,
                    eliminate_duplicates=MyElementwiseDuplicateElimination(), return_least_infeasible=True)
 
     problem = PortfolioRealOrderedProblem(instance, scheduling_order, pause_event=pause_event, stop_event=stop_event)
@@ -207,12 +208,14 @@ def run_de(termination, pop_size, instance, random_seed, scheduling_order, **kwa
     gui_output = kwargs['gui_output']
 
     variant = f"DE/{selection}/1/{crossover}"
+    display = kwargs['display'] if 'display' in kwargs else None
 
     method = MyDE(pop_size=pop_size,
                   sampling=LatinHypercubeSampling(iterations=100, criterion="maxmin"),
                   variant=variant,
                   CR=cr,
                   F=f,
+                  display=display,
                   dither=dither,
                   jitter=jitter
                   )
@@ -247,6 +250,8 @@ def run_seeded_ga(termination, pop_size, instance, random_seed, **kwargs):
     pause_event = kwargs['pause_event']
     gui_output = kwargs['gui_output']
 
+    display = kwargs['display'] if 'display' in kwargs else None
+
     n_pool_solutions = 10
     pool_search_mode = 1
     kwargs.setdefault('old_solution', None)
@@ -254,10 +259,10 @@ def run_seeded_ga(termination, pop_size, instance, random_seed, **kwargs):
                            output_dir, pre_solution=kwargs['old_solution'])
 
     method = MyGA(pop_size=pop_size, sampling=SeededSampling(seeds), crossover=crossover, mutation=mutation,
-                  eliminate_duplicates=True, return_least_infeasible=True,
+                  eliminate_duplicates=True, return_least_infeasible=True, display=display,
                   verbose=True)
 
-    problem = TestPortfolioProblemWithRepair(instance, pause_event=pause_event, stop_event=stop_event)
+    problem = PortfolioProblemWithRepair(instance, pause_event=pause_event, stop_event=stop_event)
     # problem = PortfolioSelectionProblem(instance)
     res = minimize(problem, method, termination=termination, seed=random_seed, save_history=False,
                    save_opt_intervals=True, verbose=kwargs["pymoo_verbose"], gui_output=gui_output)
@@ -295,14 +300,14 @@ def run_aga(termination, pop_size, instance, random_seed, **kwargs):
     pause_event = kwargs['pause_event']
     kwargs.setdefault('gui_output', None)
     gui_output = kwargs['gui_output']
+    display = kwargs['display'] if 'display' in kwargs else None
 
-
-    method = MyAGA(pop_size=pop_size, sampling=SeededSampling(seeds), crossover=crossover, mutation=mutation,
+    method = HEGCL(pop_size=pop_size, sampling=SeededSampling(seeds), crossover=crossover, mutation=mutation,
                   eliminate_duplicates=True, return_least_infeasible=True, gurobi_decomposed=True,
-                  verbose=True, output_dir=output_dir, gurobi_time_limit=t_limitation,
+                  verbose=True, output_dir=output_dir, gurobi_time_limit=t_limitation, display=display,
                   group_size=group_size)
 
-    problem = TestPortfolioProblemWithRepair(instance, pause_event=pause_event, stop_event=stop_event)
+    problem = PortfolioProblemWithRepair(instance, pause_event=pause_event, stop_event=stop_event)
     res = minimize(problem, method, termination=termination, seed=random_seed, save_history=False,
                    save_opt_intervals=True, verbose=kwargs["pymoo_verbose"], gui_output=gui_output)
 

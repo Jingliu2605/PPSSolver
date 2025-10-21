@@ -2,6 +2,8 @@ import pickle
 import os
 import pathlib
 import numpy as np
+from IPython.core.display_functions import display
+
 from solvers.gurobi_solver import GurobiSolver
 from problem.enums import SchedulingOrder, Optimizer
 from executor import run_optimizer, report_heuristic
@@ -12,7 +14,8 @@ from problem.portfolio import portfolio_from_pickle
 import tkinter as tk
 from tkinter import messagebox
 from operators.gurobi_operators import get_gurobi_start_from_ea_solutions, generate_new_instance_with_changes
-from problem.test_portfolio_with_repair import build_from_array_and_repair
+from problem.portfolio_problem_with_repair import build_from_array_and_repair
+from pymoo.util.display import SingleObjectiveDisplay
 
 def run_dynamic_ppssp_solver(project_file, optimized_portfolio, solver, param_values, output_dir, current_year, new_budget, removed_projects, pause_event=None, stop_event=None, gui_output=None):
     try:
@@ -103,6 +106,7 @@ def run_ppssp_solver(project_file, solver, param_values, output_dir, baseline_so
             eval_termination = ('n_eval', int(param_values[2]))
             ga_cross_rate = float(param_values[3])
             ga_mut_rate = float(param_values[4])
+            display_frequency = int(param_values[5])
             pop_size = int(param_values[1])
             start_time_rep = True
             pheno = False
@@ -120,7 +124,8 @@ def run_ppssp_solver(project_file, solver, param_values, output_dir, baseline_so
                                         crossover_rate=ga_cross_rate, pymoo_verbose=True, 
                                         seeded_time=0, old_solution=baseline_solution_for_new_instance,
                                         mutation=SwapMutation(prob=ga_mut_rate), mutation_rate=ga_mut_rate, pheno=False, 
-                                        pause_event=pause_event, stop_event=stop_event, gui_output=gui_output)
+                                        pause_event=pause_event, stop_event=stop_event, gui_output=gui_output,
+                                        display=SingleObjectiveDisplay(resolution=display_frequency))
 
                 fitnesses[run_index], times[run_index], generations[run_index], evals[run_index] = report_heuristic(instance, solver, run_index, output_solver_dir, 1, results, start_time_rep, pheno)
             return np.mean(fitnesses), np.mean(times), np.mean(generations), np.mean(evals)
@@ -131,6 +136,7 @@ def run_ppssp_solver(project_file, solver, param_values, output_dir, baseline_so
             pheno = True
             de_cross_rate = float(param_values[3])
             de_weight = float(param_values[4])
+            display_frequency = int(param_values[5])
             output_solver_dir = get_result_path(output_dir, instance.identifier, solver)
             runs = int(param_values[0])
             fitnesses = np.zeros(runs)
@@ -142,7 +148,8 @@ def run_ppssp_solver(project_file, solver, param_values, output_dir, baseline_so
                                         SchedulingOrder.EARLIEST, display_each_run=False,
                                         analyze_output=False, F=de_weight, CR=de_cross_rate, crossover='bin',
                                         selection='rand', dither='no', jitter=True, pymoo_verbose=True,
-                                        pheno=True, pause_event=pause_event, stop_event=stop_event, gui_output=gui_output)
+                                        pheno=True, pause_event=pause_event, stop_event=stop_event,
+                                        display=SingleObjectiveDisplay(resolution=display_frequency), gui_output=gui_output)
                 fitnesses[run_index], times[run_index], generations[run_index], evals[run_index] = report_heuristic(instance, solver, run_index, output_solver_dir, 1, results, start_time_rep, pheno)
             return np.mean(fitnesses), np.mean(times), np.mean(generations), np.mean(evals)
         elif solver == "BRKGA":
@@ -156,12 +163,18 @@ def run_ppssp_solver(project_file, solver, param_values, output_dir, baseline_so
             evals = np.zeros(runs)
             start_time_rep = False
             pheno = True
+            display_frequency = int(param_values[5])
+            bias = float(param_values[3])  # 0.3663063352420889
+            prop_elites = float(param_values[4]) #0.21573475847727405
+
+
             for run_index in range(runs):
                 results = run_optimizer(Optimizer.BRKGA, pop_size, instance, eval_termination, run_index, 1, output_solver_dir,
                                         SchedulingOrder.EARLIEST, display_each_run=False, analyze_output=False,
-                                        bias=0.3663063352420889,
-                                        prop_elites=0.21573475847727405, prop_mutants=0.1,
-                                        pymoo_verbose=False, pheno=True, pause_event=pause_event, stop_event=stop_event, gui_output=gui_output)
+                                        bias=bias,
+                                        prop_elites=prop_elites, prop_mutants=0.1,
+                                        display=SingleObjectiveDisplay(resolution=display_frequency),
+                                        pymoo_verbose=True, pheno=True, pause_event=pause_event, stop_event=stop_event, gui_output=gui_output)
                 fitnesses[run_index], times[run_index], generations[run_index], evals[run_index] = report_heuristic(
                     instance, solver, run_index, output_solver_dir, 1, results, start_time_rep, pheno)
             return np.mean(fitnesses), np.mean(times), np.mean(generations), np.mean(evals)
@@ -171,6 +184,7 @@ def run_ppssp_solver(project_file, solver, param_values, output_dir, baseline_so
             pop_size = int(param_values[3])
             ga_cross_rate = float(param_values[4])
             ga_mut_rate = float(param_values[5])
+            display = int(param_values[6])
             start_time_rep = True
             pheno = False
             output_solver_dir = get_result_path(output_dir, instance.identifier, solver, t_limitation=t_limitation, size_groups=size_groups)
@@ -187,6 +201,7 @@ def run_ppssp_solver(project_file, solver, param_values, output_dir, baseline_so
                                         crossover_rate=ga_cross_rate, pymoo_verbose=True, seeded_time=t_limitation,
                                         group_size=size_groups, old_solution=baseline_solution_for_new_instance,
                                         mutation=SwapMutation(prob=ga_mut_rate), mutation_rate=ga_mut_rate, pheno=False,
+                                        display=SingleObjectiveDisplay(resolution=display),
                                         pause_event=pause_event, stop_event=stop_event, gui_output=gui_output)
                 fitnesses[run_index], times[run_index], generations[run_index], evals[run_index] = report_heuristic(instance, solver, run_index, output_solver_dir, 1, results, start_time_rep, pheno)
             return np.mean(fitnesses), np.mean(times), np.mean(generations), np.mean(evals)
