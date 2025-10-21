@@ -21,8 +21,8 @@ from pymoo.operators.sampling.random_sampling import FloatRandomSampling
 from pymoo.operators.selection.tournament_selection import TournamentSelection, comp_by_cv_and_fitness
 from pymoo.termination.max_gen import MaximumGenerationTermination
 from pymoo.util.display import SingleObjectiveDisplay
-from problem.test_portfolio_with_repair import heuristic_local
-from problem.test_portfolio_with_repair import portfolio_local_search
+from problem.portfolio_problem_with_repair import heuristic_local
+from problem.portfolio_problem_with_repair import portfolio_local_search
 from problem.portfolio import build_from_array
 from pymoo.model.individual import Individual
 from pymoo.model.population import Population
@@ -31,7 +31,7 @@ from operators.gurobi_operators import local_search_gurobi, run_gurobi_for_decom
 from grouping import problem_dependent_random_grouping
 
 
-class MyAGA(GeneticAlgorithm):
+class HEGCL(GeneticAlgorithm):
 
     def __init__(self,
                  pop_size=100,
